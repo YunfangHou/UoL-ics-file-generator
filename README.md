@@ -1,4 +1,6 @@
 # UoL-ics-file-generator
+[🇨🇳中文说明文档](https://github.com/YunfangHou/UoL-ics-file-generator/blob/main/README-cn.md)
+
 Automatically generate an .ics file of University of Liverpool [Timetable](https://timetables.liverpool.ac.uk).
 
 ## Usage
