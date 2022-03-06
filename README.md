@@ -1,5 +1,5 @@
 # UoL-ics-file-generator
-Automatically generate an .ics file of University of Liverpool timetable.
+Automatically generate an .ics file of University of Liverpool [Timetable](https://timetables.liverpool.ac.uk).
 
 ## Usage
 1. Download the file `main.py`.
