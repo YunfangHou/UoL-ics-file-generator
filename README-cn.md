@@ -6,7 +6,7 @@
 1. 下载 `main.py`
 2. 在 IDE 或者终端上运行 `main.py`
 3. 在 `main.py` 的同级目录下会生成文件 `timetable.ics`
-4. 将 `timetable.ics` 
+4. 将 `timetable.ics` 导入你的日历应用。
 
 ## 常见问题
 ### 这个程序有图形界面吗？
