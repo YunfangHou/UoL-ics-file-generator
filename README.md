@@ -6,8 +6,9 @@ Automatically generate an .ics file of University of Liverpool [Timetable](https
 ## Usage
 1. Download the file `main.py`.
 2. Run `main.py` on any IDE or terminal.
-3. Find the file `timetable.ics` in the same folder as you save the `main.py`.
-4. Import `timetable.ics` into your calendar app.
+3. You need to input your UoL student account username and password, the start year and end year of your academic year when the program running.
+4. Find the file `timetable.ics` in the same folder as you save the `main.py`.
+5. Import `timetable.ics` into your calendar app.
 
 ## FAQ
 ### Q: Is there any application with a user interface?
