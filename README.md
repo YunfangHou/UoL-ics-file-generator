@@ -12,7 +12,7 @@ Automatically generate an .ics file of University of Liverpool [Timetable](https
 
 ## FAQ
 ### Q: Is there any application with a user interface?
-A: No. It can only run on IDE or terminal. You can fork this repo and make a UI if you like.
+A: No. It can only run on IDE. You can fork this repo and make a UI if you like.
 
 ### Q: Is network needed?
 A: Yes.
