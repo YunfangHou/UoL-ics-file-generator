@@ -3,15 +3,15 @@
 通过利物浦大学 [Timetable](https://timetables.liverpool.ac.uk) 自动生成 `.ics` 文件。
 
 ## 使用方法
-1. 下载 `main.py`
-2. 在 IDE 或者终端上运行 `main.py`
+1. 下载 `main.py`。
+2. 在 IDE 上运行 `main.py`，并且需要安装一些额外的 package。
 3. 在程序运行时，你需要输入你的学校账户用户名、密码，以及你本学年的开始和结束年份。
-4. 在 `main.py` 的同级目录下会生成文件 `timetable.ics`
+4. 在 `main.py` 的同级目录下会生成文件 `timetable.ics`。
 5. 将 `timetable.ics` 导入你的日历应用。
 
 ## 常见问题
 ### 这个程序有图形界面吗？
-没有。它只可以在 IDE 或终端运行。如果你有兴趣，可以 fork 这个项目，制作一套图形界面。
+没有。它只可以在 IDE 上运行。如果你有兴趣，可以 fork 这个项目，制作一套图形界面。
 
 ### 运行时需要网络连接吗？
 是的。
