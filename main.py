@@ -2,15 +2,10 @@
 # DO NOT use the code for other purposes except generating ics file.
 
 import http.cookiejar
-from urllib.error import URLError, HTTPError
 import requests
 import urllib
 import re
 import time
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-import sys
-import io
 
 
 def get_one_day_timetable_html(year, month, day):
