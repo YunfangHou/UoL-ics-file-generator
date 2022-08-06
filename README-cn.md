@@ -1,3 +1,5 @@
+** 本中文文档尚未更新，请以英文文档为准**
+
 # 利物浦大学ics文件自动生成器
 
 通过利物浦大学 [Timetable](https://timetables.liverpool.ac.uk) 自动生成 `.ics` 文件。
