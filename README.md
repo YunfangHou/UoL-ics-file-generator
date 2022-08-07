@@ -4,7 +4,7 @@
 Automatically generate an .ics file of University of Liverpool [Timetable](https://timetables.liverpool.ac.uk).
 
 ## Usage
-1. Download the released executable application.
+1. Download the newly released executable application.
 2. Run the application.
 3. Input your UoL student account username and password, the start year and end year of your academic year according to the instruction in the program window.
 4. Find the file `timetable.ics` in the same folder of the application.
