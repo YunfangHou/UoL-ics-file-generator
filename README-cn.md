@@ -9,6 +9,8 @@
 4. 在应用程序的同级目录下会生成文件 `timetable.ics`。
 5. 将 `timetable.ics` 导入你的日历应用。
 
+ macOS 用户请注意：`timetable.ics` 文件会存在用户目录下，比如`/Users/your_user_name/timetable.ics`，而非运行应用的目录。
+
 ## 常见问题
 ### 这个程序有图形界面吗？
 暂时没有现代化的用户界面，只有控制台形式的简易程序。
