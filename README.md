@@ -3,6 +3,8 @@
 
 Automatically generate an .ics file of University of Liverpool [Timetable](https://timetables.liverpool.ac.uk).
 
+Please star the repo if you like it 🌟
+
 ## Usage
 1. Download the newly released executable application.
 2. Run the application.
