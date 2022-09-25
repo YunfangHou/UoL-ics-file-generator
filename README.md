@@ -25,3 +25,4 @@ A: Your personal information is secure. This program just run on your own comput
 ## TODO
 - Language option
 - Modern user interface
+- Fix the file saving bug on macOS
