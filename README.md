@@ -10,6 +10,8 @@ Automatically generate an .ics file of University of Liverpool [Timetable](https
 4. Find the file `timetable.ics` in the same folder of the application.
 5. Import `timetable.ics` into your calendar app.
 
+ macOS user attention: the `timetable.ics` will be saved in the user directory like `/Users/your_user_name/timetable.ics`, not the folder of the application.
+
 ## FAQ
 ### Q: Is there any application with a user interface?
 A: There is no modern user interface with bottons. Only console app.
