@@ -1,8 +1,8 @@
 # 利物浦大学ics文件自动生成器
 
-如果你喜欢这个项目，就 star 一下吧🌟
-
 通过利物浦大学 [Timetable](https://timetables.liverpool.ac.uk) 自动生成 `.ics` 文件。
+
+如果你喜欢这个项目，就 star 一下吧🌟
 
 ## 使用方法
 1. 在 `Releases` 中下载最新发布的应用程序。
