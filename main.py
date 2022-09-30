@@ -6,7 +6,7 @@ import requests
 import urllib
 import re
 import time
-
+import uuid
 
 def get_one_day_timetable_html(year, month, day):
     year_str = str(year)
@@ -191,6 +191,7 @@ def write_ics():
                                 ics.write('CLASS:PUBLIC\n')
                                 ics.write('DESCRIPTION:\n')
                                 ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
+                                ics.write('UID:' + str(uuid.uuid1()) + '\n')
                             for list in list_list:
                                 with open('timetable.ics', 'a') as ics:
                                     ics.write(list[i] + '\n')
@@ -207,6 +208,8 @@ def write_ics():
                             print('*************************************************************************')
                             print()
                             redo_write_ics(username, password, start_year, end_year)
+    with open('timetable.ics', 'a') as ics:
+        ics.write('END:VCALENDAR')
 
 
 def redo_write_ics(username, password, start_year, end_year):
@@ -229,6 +232,7 @@ def redo_write_ics(username, password, start_year, end_year):
                             ics.write('CLASS:PUBLIC\n')
                             ics.write('DESCRIPTION:\n')
                             ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
+                            ics.write('UID:'+str(uuid.uuid1())+'\n')
                         for list in list_list:
                             with open('timetable.ics', 'a') as ics:
                                 ics.write(list[i] + '\n')
@@ -241,7 +245,8 @@ def redo_write_ics(username, password, start_year, end_year):
                     else:
                         print()
                         redo_write_ics(username, password, start_year, end_year)
-
+    with open('timetable.ics', 'a') as ics:
+        ics.write('END:VCALENDAR')
 
 def main():
     start_time = time.perf_counter()
