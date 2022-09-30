@@ -25,6 +25,9 @@ A: Yes. The application need to read the timetable information from the Uol webs
 A: Your personal information is secure. This program just run on your own computer and nobody could get your password. Check the code if you like.
 
 ## TODO
-- Language option
+- Line length should not be longer than 75 characters (RFC 5545 3.1. Content Lines)
+- Language options
+- Personalized `SUMMARY` and `DESCRIPTION` settings
 - Modern user interface
 - Fix the file saving bug on macOS
+
