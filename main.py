@@ -7,6 +7,8 @@ import urllib
 import re
 import time
 import uuid
+import json
+
 
 def get_one_day_timetable_html(year, month, day):
     year_str = str(year)
@@ -79,48 +81,75 @@ def simulate_login(username, password, year, month, day):
     return result
 
 
+# def extract_information_by_regex(html):
+#     html_obj = re.match(r"\[(.*)\]", html)
+#     html = html_obj.group(1)
+#     print(html)
+# 
+#     title_list = []
+#     start_list = []
+#     end_list = []
+#     location_list = []
+#     lecturer_list = []
+# 
+#     match_obj = re.match('.*?"title":"(.*?)(","start":.*)', html)
+#     while match_obj != None:
+#         if len(match_obj.group(1)) != 7:
+#             title = re.match('.*?"activitydesc":"(.*?)(","activitytype":.*)', html)
+#             title_list.append(title.group(1))
+#         else:
+#             title_list.append(match_obj.group(1))
+#         html = match_obj.group(2)
+# 
+#         match_obj = re.match('.*?"start":"(.*?)(","end":.*)', html)
+#         start_list.append(make_dttime(match_obj.group(1)))
+#         html = match_obj.group(2)
+# 
+#         match_obj = re.match('.*?"end":"(.*?)(","eventtimetext":.*)', html)
+#         end_list.append(make_dttime(match_obj.group(1)))
+#         html = match_obj.group(2)
+# 
+#         match_obj = re.match('.*?"locationdesc":"(.*?)(","hovertext":.*)', html)
+#         if match_obj.group(1) == '':
+#             location_list.append('Online')
+#         else:
+#             location_list.append(match_obj.group(1))
+#         html = match_obj.group(2)
+# 
+#         match_obj = re.match('.*?"FullName":"(.*?)(",.*)', html)
+#         try:
+#             lecturer_list.append(match_obj.group(1))
+#             html = match_obj.group(2)
+#         except AttributeError:
+#             lecturer_list.append('N/A')
+# 
+#         match_obj = re.match('.*?"title":"(.*?)(","start":.*)', html)
+# 
+#     list_list = [title_list, start_list, end_list, location_list, lecturer_list]
+#     # print(list_list)
+#     return list_list
+
+
 def extract_information(html):
     title_list = []
     start_list = []
     end_list = []
     location_list = []
-    teacher_list = []
+    lecturer_list = []
 
-    match_obj = re.match('.*?"title":"(.*?)(","start":.*)', html)
-    while match_obj != None:
-        if len(match_obj.group(1)) != 7:
-            title = re.match('.*?"activitydesc":"(.*?)(","activitytype":.*)', html)
-            title_list.append(title.group(1))
-        else:
-            title_list.append(match_obj.group(1))
-        html = match_obj.group(2)
+    html_json_load = (json.loads(html))
+    for one_class in html_json_load:
+        title_list.append(one_class['activitydesc'])
+        start_list.append(make_dttime(one_class['start']))
+        end_list.append(make_dttime(one_class['end']))
+        location_list.append(one_class['locationdesc'])
 
-        match_obj = re.match('.*?"start":"(.*?)(","end":.*)', html)
-        start_list.append(make_dttime(match_obj.group(1)))
-        html = match_obj.group(2)
+        lecturer_info_json = one_class['staffs']
+        lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json['FullName'] + '\nEmail: ' + lecturer_info_json[
+            'Email'] + '\nPhoneNumber:' + lecturer_info_json['PhoneNumber']
+        lecturer_list.append(lecturer_info_formatted)
 
-        match_obj = re.match('.*?"end":"(.*?)(","eventtimetext":.*)', html)
-        end_list.append(make_dttime(match_obj.group(1)))
-        html = match_obj.group(2)
-
-        match_obj = re.match('.*?"locationdesc":"(.*?)(","hovertext":.*)', html)
-        if match_obj.group(1) == '':
-            location_list.append('Online')
-        else:
-            location_list.append(match_obj.group(1))
-        html = match_obj.group(2)
-
-        match_obj = re.match('.*?"FullName":"(.*?)(",.*)', html)
-        try:
-            teacher_list.append(match_obj.group(1))
-            html = match_obj.group(2)
-        except AttributeError:
-            teacher_list.append('N/A')
-
-        match_obj = re.match('.*?"title":"(.*?)(","start":.*)', html)
-
-    list_list = [title_list, start_list, end_list, location_list, teacher_list]
-    # print(list_list)
+    list_list = [title_list, start_list, end_list, location_list, lecturer_list]
     return list_list
 
 
@@ -141,8 +170,8 @@ def format_ics(list_list):
         list_list[2][end_i] = 'DTEND;VALUE=DATE-TIME:' + list_list[2][end_i]
     for location_i in range(0, module_num):
         list_list[3][location_i] = 'LOCATION:' + list_list[3][location_i]
-    for teacher_i in range(0, module_num):
-        list_list[4][teacher_i] = 'DESCRIPTION:Teacher: ' + list_list[4][teacher_i]
+    for lecturer_i in range(0, module_num):
+        list_list[4][lecturer_i] = 'DESCRIPTION:lecturer: ' + list_list[4][lecturer_i]
 
     return list_list
 
@@ -158,14 +187,28 @@ def write_ics():
 
     start_year = 0
     end_year = 0
+
+    start_month = 0
+    end_month = 0
+
     while (not start_year):
         try:
-            start_year = int(input('Please input start year : '))
+            start_year = int(input('Please input start year of the semester : '))
+        except ValueError:
+            print('The content you input is not valid')
+    while (not start_month):
+        try:
+            start_month = int(input('Please input start month of the semester (input number not word):'))
         except ValueError:
             print('The content you input is not valid')
     while (not end_year):
         try:
-            end_year = int(input('Please input end year : '))
+            end_year = int(input('Please input end year of the semester: '))
+        except ValueError:
+            print('The content you input is not valid')
+    while (not end_month):
+        try:
+            end_month = int(input('Please input end month of the semester (input number not word):'))
         except ValueError:
             print('The content you input is not valid')
 
@@ -173,11 +216,12 @@ def write_ics():
         print('Your username or password is incorrect.')
         write_ics()
     else:
-        print('Start generating ics file from ' + str(start_year) + '.01.01 to ' + str(end_year) + '.12.31.')
+        print('Start generating ics file from ' + str(start_year) + '.' + str(start_month) + '.01 to ' + str(
+            end_year) + '.' + str(end_month) + '.31')
         if start_year == end_year:
             end_year += 1
         for year in range(start_year, end_year):
-            for month in range(1, 13):
+            for month in range(start_month - 1, end_month + 1):
                 for day in range(1, 32):
                     try:
                         progress = float(((end_year - year) * (month - 1) * 30 + day) / ((end_year - start_year) * 365))
@@ -224,7 +268,8 @@ def redo_write_ics(username, password, start_year, end_year):
                 try:
                     progress = float(((end_year - year) * (month - 1) * 30 + day) / ((end_year - start_year) * 365))
                     print('Progress ' + str(round(progress, 6) * 100)[0:5] + ' %')
-                    list_list = format_ics(extract_information(simulate_login(username, password, year, month, day)))
+                    list_list = format_ics(
+                        extract_information(simulate_login(username, password, year, month, day)))
                     module_num = len(list_list[0])
                     for i in range(0, module_num):
                         with open('timetable.ics', 'a') as ics:
@@ -232,7 +277,7 @@ def redo_write_ics(username, password, start_year, end_year):
                             ics.write('CLASS:PUBLIC\n')
                             ics.write('DESCRIPTION:\n')
                             ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
-                            ics.write('UID:'+str(uuid.uuid1())+'\n')
+                            ics.write('UID:' + str(uuid.uuid1()) + '\n')
                         for list in list_list:
                             with open('timetable.ics', 'a') as ics:
                                 ics.write(list[i] + '\n')
@@ -248,6 +293,7 @@ def redo_write_ics(username, password, start_year, end_year):
     with open('timetable.ics', 'a') as ics:
         ics.write('END:VCALENDAR')
 
+
 def main():
     start_time = time.perf_counter()
     write_ics()
@@ -259,3 +305,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
