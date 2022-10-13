@@ -8,6 +8,7 @@ import re
 import time
 import uuid
 import json
+from datetime import date
 
 
 def get_one_day_timetable_html(year, month, day):
@@ -81,55 +82,6 @@ def simulate_login(username, password, year, month, day):
     return result
 
 
-# def extract_information_by_regex(html):
-#     html_obj = re.match(r"\[(.*)\]", html)
-#     html = html_obj.group(1)
-#     print(html)
-# 
-#     title_list = []
-#     start_list = []
-#     end_list = []
-#     location_list = []
-#     lecturer_list = []
-# 
-#     match_obj = re.match('.*?"title":"(.*?)(","start":.*)', html)
-#     while match_obj != None:
-#         if len(match_obj.group(1)) != 7:
-#             title = re.match('.*?"activitydesc":"(.*?)(","activitytype":.*)', html)
-#             title_list.append(title.group(1))
-#         else:
-#             title_list.append(match_obj.group(1))
-#         html = match_obj.group(2)
-# 
-#         match_obj = re.match('.*?"start":"(.*?)(","end":.*)', html)
-#         start_list.append(make_dttime(match_obj.group(1)))
-#         html = match_obj.group(2)
-# 
-#         match_obj = re.match('.*?"end":"(.*?)(","eventtimetext":.*)', html)
-#         end_list.append(make_dttime(match_obj.group(1)))
-#         html = match_obj.group(2)
-# 
-#         match_obj = re.match('.*?"locationdesc":"(.*?)(","hovertext":.*)', html)
-#         if match_obj.group(1) == '':
-#             location_list.append('Online')
-#         else:
-#             location_list.append(match_obj.group(1))
-#         html = match_obj.group(2)
-# 
-#         match_obj = re.match('.*?"FullName":"(.*?)(",.*)', html)
-#         try:
-#             lecturer_list.append(match_obj.group(1))
-#             html = match_obj.group(2)
-#         except AttributeError:
-#             lecturer_list.append('N/A')
-# 
-#         match_obj = re.match('.*?"title":"(.*?)(","start":.*)', html)
-# 
-#     list_list = [title_list, start_list, end_list, location_list, lecturer_list]
-#     # print(list_list)
-#     return list_list
-
-
 def extract_information(html):
     title_list = []
     start_list = []
@@ -144,10 +96,14 @@ def extract_information(html):
         end_list.append(make_dttime(one_class['end']))
         location_list.append(one_class['locationdesc'])
 
-        lecturer_info_json = one_class['staffs']
-        lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json['FullName'] + '\nEmail: ' + lecturer_info_json[
-            'Email'] + '\nPhoneNumber:' + lecturer_info_json['PhoneNumber']
-        lecturer_list.append(lecturer_info_formatted)
+        try:
+            lecturer_info_json = one_class['staffs']
+            lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json[0]['FullName'] + '=0D=0AEmail: ' + \
+                                      lecturer_info_json[
+                                          0]['Email'] + '=0D=0APhone number:' + lecturer_info_json[0]['PhoneNumber']
+            lecturer_list.append(lecturer_info_formatted)
+        except IndexError:
+            lecturer_list.append('')
 
     list_list = [title_list, start_list, end_list, location_list, lecturer_list]
     return list_list
@@ -171,24 +127,19 @@ def format_ics(list_list):
     for location_i in range(0, module_num):
         list_list[3][location_i] = 'LOCATION:' + list_list[3][location_i]
     for lecturer_i in range(0, module_num):
-        list_list[4][lecturer_i] = 'DESCRIPTION:lecturer: ' + list_list[4][lecturer_i]
+        list_list[4][lecturer_i] = 'DESCRIPTION;ENCODING=QUOTED-PRINTABLE:' + list_list[4][lecturer_i]
 
     return list_list
 
 
-def write_ics():
-    with open('timetable.ics', 'w') as ics:
-        head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:1.0\n'
-        ics.write(head)
-
+def request_user_info():
     print('This program need your account username and password to run.')
     username = input('Please input your UoL account username : ')
     password = input('Please input your UoL account password : ')
 
     start_year = 0
-    end_year = 0
-
     start_month = 0
+    end_year = 0
     end_month = 0
 
     while (not start_year):
@@ -214,18 +165,45 @@ def write_ics():
 
     if simulate_login(username, password, start_year, 3, 3) == 'password error':
         print('Your username or password is incorrect.')
-        write_ics()
+        return request_user_info()
+
+    info_list = [username, password, start_year, start_month, end_year, end_month]
+    return info_list
+
+
+def write_ics(username, password, start_year, start_month, end_year, end_month):
+    with open('timetable.ics', 'w') as ics:
+        head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:1.0\n'
+        ics.write(head)
+
+    info_list = request_user_info()
+    username = info_list[0]
+    password = info_list[1]
+    start_year = info_list[2]
+    start_month = info_list[3]
+    end_year = info_list[4]
+    end_month = info_list[5]
+
+    if simulate_login(username, password, start_year, 3, 3) == 'password error':
+        print('Your username or password is incorrect.')
+        write_ics(username, password, start_year, start_month, end_year, end_month)
     else:
         print('Start generating ics file from ' + str(start_year) + '.' + str(start_month) + '.01 to ' + str(
             end_year) + '.' + str(end_month) + '.31')
+
+        date_no = 0
+        date_amount = (date(end_year, end_month, 31) - date(start_year, start_month, 1)).days
+
         if start_year == end_year:
             end_year += 1
         for year in range(start_year, end_year):
-            for month in range(start_month - 1, end_month + 1):
+            for month in range(start_month - 1, end_month):
                 for day in range(1, 32):
                     try:
-                        progress = float(((end_year - year) * (month - 1) * 30 + day) / ((end_year - start_year) * 365))
+                        progress = float(date_no / (date_amount * 1.017 + 2))
                         print('Progress ' + str(round(progress, 6) * 100)[0:5] + ' %')
+                        date_no += 1
+
                         html = simulate_login(username, password, year, month, day)
                         list_list = format_ics(extract_information(html))
                         module_num = len(list_list[0])
@@ -251,52 +229,14 @@ def write_ics():
                             print('**********   An error occurs. Auto rebooting the progress...   **********')
                             print('*************************************************************************')
                             print()
-                            redo_write_ics(username, password, start_year, end_year)
-    with open('timetable.ics', 'a') as ics:
-        ics.write('END:VCALENDAR')
-
-
-def redo_write_ics(username, password, start_year, end_year):
-    with open('timetable.ics', 'w') as ics:
-        head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:1.0\n'
-        ics.write(head)
-
-    print('Start generating ics file from ' + str(start_year) + '.01.01 to ' + str(end_year) + '.12.31.')
-    for year in range(start_year, end_year):
-        for month in range(1, 13):
-            for day in range(1, 32):
-                try:
-                    progress = float(((end_year - year) * (month - 1) * 30 + day) / ((end_year - start_year) * 365))
-                    print('Progress ' + str(round(progress, 6) * 100)[0:5] + ' %')
-                    list_list = format_ics(
-                        extract_information(simulate_login(username, password, year, month, day)))
-                    module_num = len(list_list[0])
-                    for i in range(0, module_num):
-                        with open('timetable.ics', 'a') as ics:
-                            ics.write('BEGIN:VEVENT\n')
-                            ics.write('CLASS:PUBLIC\n')
-                            ics.write('DESCRIPTION:\n')
-                            ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
-                            ics.write('UID:' + str(uuid.uuid1()) + '\n')
-                        for list in list_list:
-                            with open('timetable.ics', 'a') as ics:
-                                ics.write(list[i] + '\n')
-                        with open('timetable.ics', 'a') as ics:
-                            ics.write('TRANSP:TRANSPARENT\n')
-                            ics.write('END:VEVENT\n')
-                except Exception as e:
-                    if (e.code == 500):
-                        continue
-                    else:
-                        print()
-                        redo_write_ics(username, password, start_year, end_year)
+                            write_ics(username, password, start_year, start_month, end_year, end_month)
     with open('timetable.ics', 'a') as ics:
         ics.write('END:VCALENDAR')
 
 
 def main():
     start_time = time.perf_counter()
-    write_ics()
+    write_ics(0, 0, 0, 0, 0, 0)
     end_time = time.perf_counter()
     duration = end_time - start_time
     print('Progress 100.0 %')
@@ -305,4 +245,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
