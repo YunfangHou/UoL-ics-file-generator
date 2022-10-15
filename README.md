@@ -5,6 +5,8 @@ Automatically generate an .ics file of University of Liverpool [Timetable](https
 
 Please star the repo if you like it 🌟
 
+❗Attention: The released application has not been updated for a long time. You are highly recommended to run the python program by your self to experience newest feature and optimization.
+
 ## Usage
 1. Download the newly released executable application.
 2. Run the application.
