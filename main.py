@@ -11,31 +11,7 @@ import json
 from datetime import date
 
 
-def get_one_day_timetable_html(year, month, day):
-    year_str = str(year)
-    if month < 10:
-        month_str = '0' + str(month)
-    else:
-        month_str = str(month)
-    if day < 10:
-        day_str = '0' + str(day)
-    else:
-        day_str = str(day)
-
-    # User need to use the browser tools to find his/her own identity_num and cookie
-    identity_num = '1111111111'
-    url = 'https://timetables.liverpool.ac.uk/services/get-events?start=' + year_str + '-' + month_str + '-' + day_str + '&end=' + year_str + '-' + month_str + '-' + day_str + '&_=' + identity_num
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15',
-        'Cookie': ''
-    }
-    session = requests.Session()
-
-    response = session.get(url, headers=headers)
-
-    return response.text
-
-
+# Get one day timetable html
 def simulate_login(username, password, year, month, day):
     year_str = str(year)
     if month < 10:
@@ -48,6 +24,44 @@ def simulate_login(username, password, year, month, day):
         day_str = str(day)
 
     url = 'https://timetables.liverpool.ac.uk/services/get-events?start=' + year_str + '-' + month_str + '-' + day_str + '&end=' + year_str + '-' + month_str + '-' + day_str
+
+    data = {'Username': username,
+            'Password': password}
+    post_data = urllib.parse.urlencode(data).encode('utf-8')
+
+    headers = {
+        'User-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'}
+
+    login_url = 'https://timetables.liverpool.ac.uk/account?returnUrl=%2F'
+
+    req = urllib.request.Request(login_url, headers=headers, data=post_data)
+
+    cookie = http.cookiejar.CookieJar()
+
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie))
+
+    try:
+        resp = opener.open(req)
+    except Exception:
+        print('There might be some problem with your network.')
+        print('Check you network setting and rerun the program.')
+        quit()
+
+    req = urllib.request.Request(url, headers=headers)
+
+    resp = opener.open(req)
+
+    result = resp.read().decode('utf-8')
+    if 'Username:' in result:
+        result = 'password error'
+
+    return result
+
+
+# Get a student's all timetable, valid until year 2100.
+# Hopefully I will update it then.
+def get_all_timetable(username, password):
+    url = 'https://timetables.liverpool.ac.uk/services/get-events?start=2010-01-01&end=2100-12-31'
 
     data = {'Username': username,
             'Password': password}
@@ -137,41 +151,15 @@ def request_user_info():
     username = input('Please input your UoL account username : ')
     password = input('Please input your UoL account password : ')
 
-    start_year = 0
-    start_month = 0
-    end_year = 0
-    end_month = 0
-
-    while (not start_year):
-        try:
-            start_year = int(input('Please input start year of the semester : '))
-        except ValueError:
-            print('The content you input is not valid')
-    while (not start_month):
-        try:
-            start_month = int(input('Please input start month of the semester (input number not word):'))
-        except ValueError:
-            print('The content you input is not valid')
-    while (not end_year):
-        try:
-            end_year = int(input('Please input end year of the semester: '))
-        except ValueError:
-            print('The content you input is not valid')
-    while (not end_month):
-        try:
-            end_month = int(input('Please input end month of the semester (input number not word):'))
-        except ValueError:
-            print('The content you input is not valid')
-
-    if simulate_login(username, password, start_year, 3, 3) == 'password error':
+    if get_all_timetable(username, password) == 'password error':
         print('Your username or password is incorrect.')
         return request_user_info()
 
-    info_list = [username, password, start_year, start_month, end_year, end_month]
+    info_list = [username, password]
     return info_list
 
 
-def write_ics(username, password, start_year, start_month, end_year, end_month):
+def write_ics(username, password):
     with open('timetable.ics', 'w') as ics:
         head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:1.0\n'
         ics.write(head)
@@ -179,68 +167,46 @@ def write_ics(username, password, start_year, start_month, end_year, end_month):
     info_list = request_user_info()
     username = info_list[0]
     password = info_list[1]
-    start_year = info_list[2]
-    start_month = info_list[3]
-    end_year = info_list[4]
-    end_month = info_list[5]
 
-    if simulate_login(username, password, start_year, 3, 3) == 'password error':
+    print('Connecting to university server...')
+    if get_all_timetable(username, password) == 'password error':
         print('Your username or password is incorrect.')
-        write_ics(username, password, start_year, start_month, end_year, end_month)
+        write_ics(username, password)
     else:
-        print('Start generating ics file from ' + str(start_year) + '.' + str(start_month) + '.01 to ' + str(
-            end_year) + '.' + str(end_month) + '.31')
+        print('Connection success. Starting generate ics file. \nIt may take few seconds.')
 
-        date_no = 0
-        date_amount = (date(end_year, end_month, 31) - date(start_year, start_month, 1)).days
-
-        if start_year == end_year:
-            end_year += 1
-        for year in range(start_year, end_year):
-            for month in range(start_month - 1, end_month):
-                for day in range(1, 32):
-                    try:
-                        progress = float(date_no / (date_amount * 1.017 + 2))
-                        print('Progress ' + str(round(progress, 6) * 100)[0:5] + ' %')
-                        date_no += 1
-
-                        html = simulate_login(username, password, year, month, day)
-                        list_list = format_ics(extract_information(html))
-                        module_num = len(list_list[0])
-                        for i in range(0, module_num):
-                            with open('timetable.ics', 'a') as ics:
-                                ics.write('BEGIN:VEVENT\n')
-                                ics.write('CLASS:PUBLIC\n')
-                                ics.write('DESCRIPTION:\n')
-                                ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
-                                ics.write('UID:' + str(uuid.uuid1()) + '\n')
-                            for list in list_list:
-                                with open('timetable.ics', 'a') as ics:
-                                    ics.write(list[i] + '\n')
-                            with open('timetable.ics', 'a') as ics:
-                                ics.write('TRANSP:TRANSPARENT\n')
-                                ics.write('END:VEVENT\n')
-                    except Exception as e:
-                        if (e.code == 500):
-                            continue
-                        else:
-                            print()
-                            print('*************************************************************************')
-                            print('**********   An error occurs. Auto rebooting the progress...   **********')
-                            print('*************************************************************************')
-                            print()
-                            write_ics(username, password, start_year, start_month, end_year, end_month)
+        try:
+            html = get_all_timetable(username, password)
+            list_list = format_ics(extract_information(html))
+            module_num = len(list_list[0])
+            for i in range(0, module_num):
+                with open('timetable.ics', 'a') as ics:
+                    ics.write('BEGIN:VEVENT\n')
+                    ics.write('CLASS:PUBLIC\n')
+                    ics.write('DESCRIPTION:\n')
+                    ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
+                    ics.write('UID:' + str(uuid.uuid1()) + '\n')
+                for list in list_list:
+                    with open('timetable.ics', 'a') as ics:
+                        ics.write(list[i] + '\n')
+                with open('timetable.ics', 'a') as ics:
+                    ics.write('TRANSP:TRANSPARENT\n')
+                    ics.write('END:VEVENT\n')
+        except Exception as e:
+            print()
+            print('*************************************************************************')
+            print('**********   An error occurs. Auto rebooting the progress...   **********')
+            print('*************************************************************************')
+            print()
+            write_ics(username, password)
+            
     with open('timetable.ics', 'a') as ics:
         ics.write('END:VCALENDAR')
 
 
 def main():
-    start_time = time.perf_counter()
-    write_ics(0, 0, 0, 0, 0, 0)
-    end_time = time.perf_counter()
-    duration = end_time - start_time
-    print('Progress 100.0 %')
-    print('Finish. Spend ' + str(int(duration)) + ' seconds')
+    write_ics('', '')
+    print('Finished. Please find your timetable file named "timetable.ics".')
 
 
 if __name__ == '__main__':
