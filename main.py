@@ -104,20 +104,27 @@ def extract_information(html):
     lecturer_list = []
 
     html_json_load = (json.loads(html))
-    for one_class in html_json_load:
-        title_list.append(one_class['activitydesc'])
-        start_list.append(make_dttime(one_class['start']))
-        end_list.append(make_dttime(one_class['end']))
-        location_list.append(one_class['locationdesc'])
 
+    for one_class in html_json_load:
         try:
-            lecturer_info_json = one_class['staffs']
-            lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json[0]['FullName'] + '=0D=0AEmail: ' + \
-                                      lecturer_info_json[
-                                          0]['Email'] + '=0D=0APhone number:' + lecturer_info_json[0]['PhoneNumber']
-            lecturer_list.append(lecturer_info_formatted)
-        except IndexError:
-            lecturer_list.append('')
+            title_list.append(one_class['activitydesc'])
+            start_list.append(make_dttime(one_class['start']))
+            end_list.append(make_dttime(one_class['end']))
+            location_list.append(one_class['locationdesc'])
+
+            try:
+                lecturer_info_json = one_class['staffs']
+                lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json[0]['FullName'] + '=0D=0AEmail: ' + \
+                                          lecturer_info_json[
+                                              0]['Email'] + '=0D=0APhone number:' + lecturer_info_json[0]['PhoneNumber']
+                lecturer_list.append(lecturer_info_formatted)
+            except IndexError:
+                lecturer_list.append('')
+        except Exception:
+            print(
+                'An error occurred on one class. The class might near ' + str(
+                    start_list[-1]) + ' . Check it with you timetable.')
+            continue
 
     list_list = [title_list, start_list, end_list, location_list, lecturer_list]
     return list_list
@@ -199,7 +206,7 @@ def write_ics(username, password):
             print('*************************************************************************')
             print()
             write_ics(username, password)
-            
+
     with open('timetable.ics', 'a') as ics:
         ics.write('END:VCALENDAR')
 
