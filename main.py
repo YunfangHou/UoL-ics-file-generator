@@ -9,6 +9,7 @@ import time
 import uuid
 import json
 from datetime import date
+from urllib.request import urlopen, Request
 
 
 # Get one day timetable html
@@ -95,6 +96,34 @@ def get_all_timetable(username, password):
 
     return result
 
+# Updated on 2023.01.30
+# A Microsoft Duo has been added on the timetable website, so cookie have to be used.
+def get_all_timetable_with_cookie(cookie):
+    headers = {
+        'Cookie': cookie,
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+    }
+    today = str(date.today())
+    year = today[0:4]
+    month = int(today[5:7])
+
+    start_month = 0
+    if month < 9:
+        # 2nd semester
+        start_month = '01'
+    else:
+        # 1st semester
+        start_month = '09'
+
+
+    url = 'https://timetables.liverpool.ac.uk/services/get-events?start=' + year + '-' + start_month + '-' + '01&end=2100-12-31'
+    try:
+        request = Request(url=url, headers=headers)
+        respondse = urlopen(request)
+        return respondse.read().decode()
+    except Exception:
+        return 'cookie invalid'
+
 
 def extract_information(html):
     title_list = []
@@ -114,9 +143,10 @@ def extract_information(html):
 
             try:
                 lecturer_info_json = one_class['staffs']
-                lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json[0]['FullName'] + '=0D=0AEmail: ' + \
+                lecturer_info_formatted = 'Lecturer: ' + lecturer_info_json[0]['FullName'] + '\\r\\nEmail: ' + \
                                           lecturer_info_json[
-                                              0]['Email'] + '=0D=0APhone number:' + lecturer_info_json[0]['PhoneNumber']
+                                              0]['Email'] + '\\r\\nPhone number:' + lecturer_info_json[0][
+                                              'PhoneNumber']
                 lecturer_list.append(lecturer_info_formatted)
             except IndexError:
                 lecturer_list.append('')
@@ -132,7 +162,8 @@ def extract_information(html):
 
 def make_dttime(time):
     match_obj = re.match('(....)-(..)-(..)T(..):(..)', time)
-    dttime = match_obj.group(1) + match_obj.group(2) + match_obj.group(3) + 'T' + match_obj.group(4) + match_obj.group(
+    dttime = match_obj.group(1) + match_obj.group(2) + match_obj.group(3) + 'T' + match_obj.group(
+        4) + match_obj.group(
         5) + '00'
     return dttime
 
@@ -166,9 +197,20 @@ def request_user_info():
     return info_list
 
 
+def request_user_cookie():
+    print('This program need your cookie to run.')
+    cookie = input('Please input your timetable website cookie:')
+
+    if get_all_timetable_with_cookie(cookie) == 'cookie invalid':
+        print('Your cookie is invalid.')
+        return request_user_cookie()
+
+    return cookie
+
+
 def write_ics(username, password):
     with open('timetable.ics', 'w') as ics:
-        head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:1.0\n'
+        head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:2.0\n'
         ics.write(head)
 
     info_list = request_user_info()
@@ -211,8 +253,51 @@ def write_ics(username, password):
         ics.write('END:VCALENDAR')
 
 
+def write_ics_with_cookie(cookie):
+    with open('timetable.ics', 'w') as ics:
+        head = 'BEGIN:VCALENDAR\nPRODID:Calendar-//Steve Hou//auto-generate-ics//EN\nVERSION:2.0\n'
+        ics.write(head)
+
+    cookie = request_user_cookie()
+    print('Connecting to university server...')
+    if get_all_timetable_with_cookie(cookie) == 'cookie invalid':
+        print('Your cookie is invalid.')
+        write_ics_with_cookie(cookie)
+    else:
+        print('Connection success. Starting generate ics file. \nIt may take few seconds.')
+
+        try:
+            html = get_all_timetable_with_cookie(cookie)
+            list_list = format_ics(extract_information(html))
+            module_num = len(list_list[0])
+            for i in range(0, module_num):
+                with open('timetable.ics', 'a') as ics:
+                    ics.write('BEGIN:VEVENT\n')
+                    ics.write('CLASS:PUBLIC\n')
+                    ics.write('DESCRIPTION:\n')
+                    ics.write('DTSTAMP;VALUE=DATE-TIME:20220201T111819\n')
+                    ics.write('UID:' + str(uuid.uuid1()) + '\n')
+                for list in list_list:
+                    with open('timetable.ics', 'a') as ics:
+                        ics.write(list[i] + '\n')
+                with open('timetable.ics', 'a') as ics:
+                    ics.write('TRANSP:TRANSPARENT\n')
+                    ics.write('END:VEVENT\n')
+        except Exception as e:
+            print()
+            print(e)
+            print('*************************************************************************')
+            print('**********   An error occurs. Auto rebooting the progress...   **********')
+            print('*************************************************************************')
+            print()
+            write_ics_with_cookie(cookie)
+
+    with open('timetable.ics', 'a') as ics:
+        ics.write('END:VCALENDAR')
+
+
 def main():
-    write_ics('', '')
+    write_ics_with_cookie('')
     print('Finished. Please find your timetable file named "timetable.ics".')
 
 
