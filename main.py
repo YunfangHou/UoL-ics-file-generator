@@ -283,6 +283,8 @@ def write_ics_with_cookie(cookie):
                 with open('timetable.ics', 'a') as ics:
                     ics.write('TRANSP:TRANSPARENT\n')
                     ics.write('END:VEVENT\n')
+            with open('timetable.ics', 'a') as ics:
+                ics.write('END:VCALENDAR')
         except Exception as e:
             print()
             print(e)
@@ -292,8 +294,6 @@ def write_ics_with_cookie(cookie):
             print()
             write_ics_with_cookie(cookie)
 
-    with open('timetable.ics', 'a') as ics:
-        ics.write('END:VCALENDAR')
 
 
 def main():
